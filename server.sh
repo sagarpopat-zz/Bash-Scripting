@@ -9,7 +9,7 @@ then
         php=$(which php)
         mysql=$(which mysql)
         nginx=$(which snginx)
-        if [ -n $php ] && [ -n $mysql ] && [ -n $nginx ];     # Check if its non empty or not
+        if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/nginx' ]  # Check if its non empty or not
         then
                 echo "Packages are already Installed";
         else
