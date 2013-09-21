@@ -7,53 +7,53 @@
 #Create wp-config.php with proper DB configuration. (You can use wp-config-sample.php as your template)
 #You may need to fix file permissions, cleanup temporary files, restart or reload nginx config.
 #Tell user to open example.com in browser (if all goes well)
+#Written by Sagar Popat
 
 
 #!/bin/bash
 #php=$(which php)
 
-if [ $(id -u) -eq 0 ];
+if [ $(id -u) -eq 0 ];				 #check if the you are a root user or not							
 then
-	php=$(which php)
-	mysql=$(which mysql)
-	nginx=$(which nginx)
-	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/`ginx' ]
-	then
-		echo "All the Packages are already installed ";
+	php=$(which php)			 # stores the path of php(installed) in php varible
+	mysql=$(which mysql)			# stores the path of mysql(installed) in mysql varible
+	nginx=$(which nginx)			# stores the path of nginx(installed) in nginx varible
+	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/`nginx' ]  # check if the php,mysql,nginx are installed or not 
+	clear
+		echo "All the Packages are already installed "
         else
 		
-		if [ $php = '/usr/bin/php' ];
+		if [ $php = '/usr/bin/php' ]      			# check if the php is installed 
 		then
 	
-			sudo apt-get install php5 php5-fpm;
+			 apt-get install php5 php5-fpm
 		fi
-		if [ $mysql = '/usr/bin/mysql' ];
+		if [ $mysql = '/usr/bin/mysql' ]  			# check if the mysql is installed or not 
 		then	
 		
-			sudo apt-get  install mysql-server;
+			apt-get  install mysql-server
 		fi
-		if [ $nginx = '/usr/sbin/nginx' ];
+		if [ $nginx = '/usr/sbin/nginx' ]			# check if the nginx is installed or not 
 		then
 		
 			sudo apt-get install nginx;
 		fi
 	fi
-	echo " Enter the domain name"
+	echo " Enter the domain name"					#read the domain name
 	read domain
-	echo "127.0.0.1		$domain" >> /etc/hosts	
+	echo "127.0.0.1		$domain" >> /etc/hosts	                 # add entry to hosts file
 	#cp /etc/nginx/sites-available/default /etc/nginx/sites-enable/$domain.conf
-	mkdir /usr/share/nginx/www/$domain
-	touch /usr/share/nginx/www/$domain/index.html
-	echo "welcome $domain , It works" >> /usr/share/nginx/www/$domain/index.html
-	touch /etc/nginx/sites-enabled/$domain.conf
-	echo "server
+	mkdir /usr/share/nginx/www/$domain				#create the directory of domain name
+	touch /usr/share/nginx/www/$domain/index.html			#create index page for testing
+	echo "welcome $domain , It works" >> /usr/share/nginx/www/$domain/index.html #Add contains to the index file
+	touch /etc/nginx/sites-enabled/$domain.conf			#create the virtual hosting configuration file
+	echo "server							#add configuration to the domain config file
     {
     server_name $domain;
 
     access_log /var/log/nginx/$domain.access.log;
 
-	
-	        error_log /var/log/nginx/$domain.error.log;
+     error_log /var/log/nginx/$domain.error.log;
 
     root /usr/share/nginx/www/$domain/wordpress/;
 
@@ -76,39 +76,40 @@ then
     }
 }" >> /etc/nginx/sites-enabled/$domain.conf
 
-echo " Enter the mysql usernmae -- We are going make a wordpress database "
+echo " Enter the mysql usernmae -- We are going make a wordpress database "      #read mysqlusername to add database
 read uname
 
-mysqladmin -u $uname -p create $domain\_db
+mysqladmin -u $uname -p create $domain\_db					# create database like domainname_db
 
-if [ $? -eq 0 ]
+if [ $? -eq 0 ]									#check mysqladmin has any error
 then
 	echo "Database succesfully created"
 else
 	echo "Incorrect Username or password"
 	exit 1
 fi
-#wget http://wordpress.org/latest.zip
+wget http://wordpress.org/latest.zip 					# Download the Wordpress by using wget
 
-#if [ $? -eq 0 ]
-#then
-#	echo "Wordpress download succesfully";
-#else
-#	exit 1;
-#fi
+if [ $? -eq 0 ]								#check the error code for wget command
+then
+	echo "Wordpress download succesfully";
+else
+	echo "Can't Download Wordpress.Check your internet Connectivity"
+	exit 1;
+fi
 
-echo -n "Enter the password for Mysql -- We need it for wp-config.php:-"
-read -s password
+echo -n "Enter the password for Mysql -- We need it for wp-config.php:-"   
+read -s password							#read password for mysql
 echo $password
-cp -R wordpress /usr/share/nginx/www/$domain/
-mv /usr/share/nginx/www/$domain/wordpress/wp-config-sample.php /usr/share/nginx/www/$domain/wordpress/wp-config.php
-sed -i s/database_name_here/$domain\_db/g /usr/share/nginx/www/$domain/wordpress/wp-config.php
-sed -i s/username_here/$uname/g /usr/share/nginx/www/$domain/wordpress/wp-config.php
-sed -i s/password_here/$password/g /usr/share/nginx/www/$domain/wordpress/wp-config.php
+cp -R wordpress /usr/share/nginx/www/$domain/				#copy wordpress to domain documentroot
+mv /usr/share/nginx/www/$domain/wordpress/wp-config-sample.php /usr/share/nginx/www/$domain/wordpress/wp-config.php  # rename the filename from wp-config-sample.php to wp-config.php
+sed -i s/database_name_here/$domain\_db/g /usr/share/nginx/www/$domain/wordpress/wp-config.php                  # Editing the wp-config.php file according to the occureance
+sed -i s/username_here/$uname/g /usr/share/nginx/www/$domain/wordpress/wp-config.php				# Editing the wp-config.php file according to the occureance							
+sed -i s/password_here/$password/g /usr/share/nginx/www/$domain/wordpress/wp-config.php				# Editing the wp-config.php file according to the occureance
 
 
-service nginx reload
-
+service nginx reload								#reloading the server
+		
 clear
 echo "#################################################################################"
 echo " Wordpress Succesfully installed . Please open http://$domain"
