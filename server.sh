@@ -81,7 +81,7 @@ then
     }
 }" >> /etc/nginx/sites-enabled/$domain.conf
 
-echo " Enter the mysql usernmae -- We are going make a wordpress database "      #read mysqlusername to add database
+echo " Enter the mysql username and Password -- We are going make a wordpress database "      #read mysqlusername to add database
 read uname
 
 mysqladmin -u $uname -p create $domain\_db					# create database like domainname_db
