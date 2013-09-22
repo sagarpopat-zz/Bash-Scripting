@@ -18,24 +18,29 @@ then
 	php=$(which php)			 # stores the path of php(installed) in php varible
 	mysql=$(which mysql)			# stores the path of mysql(installed) in mysql varible
 	nginx=$(which nginx)			# stores the path of nginx(installed) in nginx varible
-	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/`nginx' ]  # check if the php,mysql,nginx are installed or not 
+	zip=$(which unzip)			# stores the path of unzip(installed) in unzip varible
+	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/nginx' ]  # check if the php,mysql,nginx are installed ornot 
+	then
 	clear
 		echo "All the Packages are already installed "
         else
 		
-		if [ $php = '/usr/bin/php' ]      			# check if the php is installed 
+		if [[ $php = '/usr/bin/php' ]]      			# check if the php is installed 
 		then
-	
-			 apt-get install php5 php5-fpm
+			echo "PHP is already installed"
+		else
+	 		apt-get install php5 php5-fpm
 		fi
-		if [ $mysql = '/usr/bin/mysql' ]  			# check if the mysql is installed or not 
-		then	
-		
+		if [[ $mysql = '/usr/bin/mysql' ]]  			# check if the mysql is installed or not 
+		then
+			echo "Mysql is already installed"	
+		else
 			apt-get  install mysql-server
 		fi
-		if [ $nginx = '/usr/sbin/nginx' ]			# check if the nginx is installed or not 
+		if [[ $nginx = '/usr/sbin/nginx' ]]			# check if the nginx is installed or not 
 		then
-		
+			echo "nginx is already installed"
+		else
 			sudo apt-get install nginx;
 		fi
 	fi
@@ -100,7 +105,14 @@ fi
 
 echo -n "Enter the password for Mysql -- We need it for wp-config.php:-"   
 read -s password							#read password for mysql
-echo $password
+#echo $password
+if [ $zip='/usr/bin/unzip' ]
+then
+	echo "unzip is already installed"
+else
+	apt-get install unzip;
+fi
+unzip latest.zip
 cp -R wordpress /usr/share/nginx/www/$domain/				#copy wordpress to domain documentroot
 mv /usr/share/nginx/www/$domain/wordpress/wp-config-sample.php /usr/share/nginx/www/$domain/wordpress/wp-config.php  # rename the filename from wp-config-sample.php to wp-config.php
 sed -i s/database_name_here/$domain\_db/g /usr/share/nginx/www/$domain/wordpress/wp-config.php                  # Editing the wp-config.php file according to the occureance
@@ -110,7 +122,7 @@ sed -i s/password_here/$password/g /usr/share/nginx/www/$domain/wordpress/wp-con
 
 service nginx reload								#reloading the server
 		
-clear
+
 echo "#################################################################################"
 echo " Wordpress Succesfully installed . Please open http://$domain"
 echo "#################################################################################"	
