@@ -18,45 +18,50 @@ then
 	php=$(which php)			 # stores the path of php(installed) in php varible
 	mysql=$(which mysql)			# stores the path of mysql(installed) in mysql varible
 	nginx=$(which nginx)			# stores the path of nginx(installed) in nginx varible
-	zip=$(which unzip)			# stores the path of unzip(installed) in unzip varible
-	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/nginx' ]  # check if the php,mysql,nginx are installed ornot 
+	if [ $php = '/usr/bin/php' ] && [ $mysql = '/usr/bin/mysql' ] && [ $nginx = '/usr/sbin/nginx' ]  # check if the php,mysql,nginx are installed or not 
 	then
-	clear
+		clear
 		echo "All the Packages are already installed "
         else
 		
-		if [[ $php = '/usr/bin/php' ]]      			# check if the php is installed 
+		if [ $php = '/usr/bin/php' ]      			# check if the php is installed 
 		then
-			echo "PHP is already installed"
-		else
-	 		apt-get install php5 php5-fpm
+	
+			 apt-get install php5 php5-fpm
 		fi
-		if [[ $mysql = '/usr/bin/mysql' ]]  			# check if the mysql is installed or not 
-		then
-			echo "Mysql is already installed"	
-		else
+		if [ $mysql = '/usr/bin/mysql' ]  			# check if the mysql is installed or not 
+		then	
+		
 			apt-get  install mysql-server
 		fi
-		if [[ $nginx = '/usr/sbin/nginx' ]]			# check if the nginx is installed or not 
+		if [ $nginx = '/usr/sbin/nginx' ]			# check if the nginx is installed or not 
 		then
-			echo "nginx is already installed"
-		else
+		
 			sudo apt-get install nginx;
 		fi
 	fi
-	echo " Enter the domain name"					#read the domain name
-	read domain
-	n=`awk 'END{print NR}' /etc/hosts`;
-	i=0; 
-	while [[ $i -lt $n ]];
- 	do
- 		if [[ `awk "NR==$i" /etc/hosts  | awk '{print $2}'` == $domain ]];
- 		then 
-			echo "Domain entry already exists in hosts file";
- 			exit 1;
- 		fi;
-     		((i = i + 1));
-	 done
+trydomain()
+{
+	echo " Enter the domain name"			
+	read domain							#read the domain name
+	echo $domain | grep ^[a-zA-Z0-9][a-zA-Z0-9\-]*.*'[com|edu|in|co\.in|org]$' >> /dev/null  #match the pattern for domain name
+	if [ $? -eq 0 ]
+	then
+		grep -w $domain /etc/hosts >> /dev/null     		#match the domain name with /etc/hosts file
+		if [ $? -eq 0 ]
+		then
+			clear			
+			echo "Domain name already exist.Try another"
+			trydomain
+		fi
+	else
+			clear			
+			echo "Can't match pattern."
+			trydomain
+	fi 
+}
+trydomain
+
 	echo "127.0.0.1		$domain" >> /etc/hosts	                 # add entry to hosts file
 	#cp /etc/nginx/sites-available/default /etc/nginx/sites-enable/$domain.conf
 	mkdir /usr/share/nginx/www/$domain				#create the directory of domain name
@@ -66,19 +71,14 @@ then
 	echo "server							#add configuration to the domain config file
     {
     server_name $domain;
-
     access_log /var/log/nginx/$domain.access.log;
-
-     error_log /var/log/nginx/$domain.error.log;
-
+    error_log /var/log/nginx/$domain.error.log;
     root /usr/share/nginx/www/$domain/wordpress/;
-
     index index.php index.html index.htm;
 
     # use fastcgi for all php files
     location ~ \.php$
    {
-        root /usr/share/nginx/www/$domain/wordpress/;
         fastcgi_pass 127.0.0.1:9000;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME /usr/share/nginx/www/wordpress/$fastcgi_script_name;
@@ -92,18 +92,23 @@ then
     }
 }" >> /etc/nginx/sites-enabled/$domain.conf
 
-echo " Enter the mysql username and Password -- We are going make a wordpress database "      #read mysqlusername to add database
-read uname
+mysqltry()
+{
+	echo " Enter the mysql usernmae -- We are going make a wordpress database "      #read mysqlusername to add database
+	read uname
 
-mysqladmin -u $uname -p create $domain\_db					# create database like domainname_db
+	mysqladmin -u $uname -p create $domain\_db					# create database like domainname_db
 
-if [ $? -eq 0 ]									#check mysqladmin has any error
-then
-	echo "Database succesfully created"
-else
-	echo "Incorrect Username or password"
-	exit 1
-fi
+	if [ $? -eq 0 ]									#check mysqladmin has any error
+	then
+		echo "Database succesfully created"
+	else
+		clear		
+		echo "Incorrect Username or password"
+		mysqltry
+	fi
+}
+mysqltry
 wget http://wordpress.org/latest.zip 					# Download the Wordpress by using wget
 
 if [ $? -eq 0 ]								#check the error code for wget command
@@ -113,17 +118,19 @@ else
 	echo "Can't Download Wordpress.Check your internet Connectivity"
 	exit 1;
 fi
-
-echo -n "Enter the password for Mysql -- We need it for wp-config.php:-"   
-read -s password							#read password for mysql
-#echo $password
-if [ $zip='/usr/bin/unzip' ]
+un=$(which unzip)
+if [ $un = /usr/bin/unzip ]
 then
 	echo "unzip is already installed"
 else
-	apt-get install unzip;
+	You need to install unzip for wordpress
+	apt-get install unzip
 fi
+
 unzip latest.zip
+echo -n "Enter the password for Mysql -- We need it for wp-config.php:-"   
+read -s password							#read password for mysql
+echo $password
 cp -R wordpress /usr/share/nginx/www/$domain/				#copy wordpress to domain documentroot
 mv /usr/share/nginx/www/$domain/wordpress/wp-config-sample.php /usr/share/nginx/www/$domain/wordpress/wp-config.php  # rename the filename from wp-config-sample.php to wp-config.php
 sed -i s/database_name_here/$domain\_db/g /usr/share/nginx/www/$domain/wordpress/wp-config.php                  # Editing the wp-config.php file according to the occureance
@@ -132,7 +139,7 @@ sed -i s/password_here/$password/g /usr/share/nginx/www/$domain/wordpress/wp-con
 
 
 service nginx reload								#reloading the server
-		
+
 
 echo "#################################################################################"
 echo " Wordpress Succesfully installed . Please open http://$domain"
