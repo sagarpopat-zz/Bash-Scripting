@@ -46,6 +46,17 @@ then
 	fi
 	echo " Enter the domain name"					#read the domain name
 	read domain
+	n=`awk 'END{print NR}' /etc/hosts`;
+	i=0; 
+	while [[ $i -lt $n ]];
+ 	do
+ 		if [[ `awk "NR==$i" /etc/hosts  | awk '{print $2}'` == $domain ]];
+ 		then 
+			echo "Domain entry already exists in hosts file";
+ 			exit 1;
+ 		fi;
+     		((i = i + 1));
+	 done
 	echo "127.0.0.1		$domain" >> /etc/hosts	                 # add entry to hosts file
 	#cp /etc/nginx/sites-available/default /etc/nginx/sites-enable/$domain.conf
 	mkdir /usr/share/nginx/www/$domain				#create the directory of domain name
